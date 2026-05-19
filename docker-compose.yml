@@ -1,0 +1,46 @@
+services:
+  oranges-inference:
+    build:
+      context: ./inference_service
+    container_name: oranges-inference
+    volumes:
+      - ./model:/app/model:ro
+    networks:
+      - ollama-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  oranges-backend:
+    build:
+      context: ./backend
+    container_name: oranges-backend
+    environment:
+      - INFERENCE_URL=http://oranges-inference:8001
+      - GALLERY_DIR=/app/photos_from_google
+    volumes:
+      - ./photos_from_google:/app/photos_from_google:ro
+    depends_on:
+      oranges-inference:
+        condition: service_healthy
+    networks:
+      - ollama-net
+    restart: unless-stopped
+
+  oranges-frontend:
+    build:
+      context: ./frontend
+    container_name: oranges-frontend
+    depends_on:
+      - oranges-backend
+    networks:
+      - ollama-net
+    restart: unless-stopped
+
+networks:
+  ollama-net:
+    external: true

@@ -1,0 +1,44 @@
+# Project-specific
+dataset/
+*.docx
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# React build
+frontend/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
