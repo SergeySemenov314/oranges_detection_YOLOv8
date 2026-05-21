@@ -30,6 +30,10 @@ const ML_DESCRIPTION = [
   {
     title: 'Инференс',
     text: 'Модель принимает изображения любого размера и формата. Перед обработкой изображение масштабируется до внутреннего разрешения модели с сохранением пропорций. При необходимости imgsz можно увеличить для лучшего распознавания мелких объектов на крупных фотографиях. Модель возвращает bounding boxes с классом и confidence для каждого найденного апельсина, а также подсчитывает процент испорченных плодов в партии.'
+  },
+  {
+    title: 'Деплой',
+    text: 'Модель упакована в Docker-контейнер с FastAPI-сервисом инференса. Рядом развёрнут Node.js бэкенд на Express, который раздаёт галерею тестовых фото и проксирует запросы к инференсу. Фронтенд на React загружает фото и показывает результат со статистикой по партии.'
   }
 ];
 
@@ -43,6 +47,23 @@ export default function App() {
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 860px)').matches
+  );
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+
+  // Track viewport width
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)');
+    const onChange = e => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Auto-open result modal on mobile when a new result arrives
+  useEffect(() => {
+    if (result && isMobile) setResultModalOpen(true);
+  }, [result, isMobile]);
 
   // Camera
   const [cameraActive, setCameraActive] = useState(false);
@@ -205,8 +226,8 @@ export default function App() {
       <header className="header">
         <span className="header-emoji">🍊</span>
         <div>
-          <h1>Детектор апельсинов</h1>
-          <p>Определение свежести цитрусовых с помощью YOLOv8</p>
+          <h1>Детектор свежести апельсинов</h1>
+          <p>Определение свежести апельсинов с помощью YOLOv8</p>
         </div>
       </header>
 
@@ -289,27 +310,48 @@ export default function App() {
           </section>
         </div>
 
-        {/* Results */}
-        {result && (
+        {/* Results — inline (desktop only) */}
+        {result && !isMobile && (
           <section className="card results-card">
             <h2>Результаты детекции</h2>
-            <div className="results-layout">
-              <div className="result-img-wrap">
-                <img src={`data:image/jpeg;base64,${result.annotated_image}`} alt="Результат" className="result-img" />
-              </div>
-              <div className="stats">
-                <StatCard label="Всего апельсинов" value={result.stats.total} color="white" icon="🍊" />
-                <StatCard label="Свежих" value={result.stats.fresh} color="green" icon="✅" />
-                <StatCard label="Испорченных" value={result.stats.rotten} color="red" icon="❌" />
-                <StatCard label="Процент брака" value={`${result.stats.rotten_percent}%`} color="yellow" icon="📊" />
-              </div>
-            </div>
+            <ResultBody result={result} />
           </section>
         )}
       </main>
 
+      {/* Results — modal (mobile) */}
+      {result && isMobile && resultModalOpen && (
+        <div className="modal-overlay" onClick={() => setResultModalOpen(false)}>
+          <div className="modal results-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Результаты детекции</h2>
+              <button className="modal-close" onClick={() => setResultModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <ResultBody result={result} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hidden canvas for photo capture */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+    </div>
+  );
+}
+
+function ResultBody({ result }) {
+  return (
+    <div className="results-layout">
+      <div className="result-img-wrap">
+        <img src={`data:image/jpeg;base64,${result.annotated_image}`} alt="Результат" className="result-img" />
+      </div>
+      <div className="stats">
+        <StatCard label="Всего апельсинов" value={result.stats.total} color="white" icon="🍊" />
+        <StatCard label="Свежих" value={result.stats.fresh} color="green" icon="✅" />
+        <StatCard label="Испорченных" value={result.stats.rotten} color="red" icon="❌" />
+        <StatCard label="Процент брака" value={`${result.stats.rotten_percent}%`} color="yellow" icon="📊" />
+      </div>
     </div>
   );
 }
