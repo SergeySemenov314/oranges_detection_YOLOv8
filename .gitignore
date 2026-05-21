@@ -2,6 +2,10 @@
 dataset/
 *.docx
 
+# Negative-mining artifacts (raw scraped images / mined hard negatives)
+candidates/
+negatives_for_kaggle/
+
 # Python
 __pycache__/
 *.py[cod]

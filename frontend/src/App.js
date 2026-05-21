@@ -3,6 +3,36 @@ import './App.css';
 
 const API = process.env.REACT_APP_API_URL || '/oranges';
 
+const ML_DESCRIPTION = [
+  {
+    title: 'Датасет',
+    text: 'За основу взят публичный датасет с Roboflow, содержащий фотографии апельсинов с разметкой bounding box для двух классов: Fresh Orange и Rotten Orange. Датасет был доразмечен вручную: добавлены bounding boxes для изображений с несколькими апельсинами, где разметка отсутствовала или была некорректной. Полигональная разметка (AI-assisted аннотации) конвертирована в формат bbox. Итоговый датасет: 2695 train / 771 valid / 385 test изображений в формате YOLOv8.'
+  },
+  {
+    title: 'Модель',
+    text: 'На первом этапе была обучена модель YOLOv8n (nano) — самая лёгкая версия архитектуры, которая показала mAP50 = 0.911 на тестовой выборке. Для улучшения качества была обучена модель YOLOv8s (small) — одноэтапный детектор объектов на основе свёрточной нейронной сети с большим количеством параметров. Обе модели инициализированы предобученными весами на датасете COCO (transfer learning). Параметры финальной модели: 11 млн весов, 28.4 GFLOPs.'
+  },
+  {
+    title: 'Обучение',
+    text: 'Платформа: Kaggle Notebooks, GPU Tesla T4. Фреймворк: Ultralytics 8.4.51, PyTorch 2.10. Параметры обучения: epochs=50, imgsz=640, batch=16, optimizer=auto, patience=10. Финальная модель обучалась все 50 эпох.'
+  },
+  {
+    title: 'Результаты на тестовой выборке (YOLOv8s)',
+    text: (
+      <>
+        mAP50: <b>0.983</b><br />
+        mAP50-95: <b>0.965</b><br />
+        Precision: <b>0.980</b><br />
+        Recall: <b>0.981</b>
+      </>
+    )
+  },
+  {
+    title: 'Инференс',
+    text: 'Модель принимает изображения любого размера и формата. Перед обработкой изображение масштабируется до внутреннего разрешения модели с сохранением пропорций. При необходимости imgsz можно увеличить для лучшего распознавания мелких объектов на крупных фотографиях. Модель возвращает bounding boxes с классом и confidence для каждого найденного апельсина, а также подсчитывает процент испорченных плодов в партии.'
+  }
+];
+
 export default function App() {
   const [gallery, setGallery] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,6 +42,7 @@ export default function App() {
   const [loadingFilename, setLoadingFilename] = useState(null);
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   // Camera
   const [cameraActive, setCameraActive] = useState(false);
@@ -145,6 +176,32 @@ export default function App() {
 
   return (
     <div className="app">
+      <button className="info-btn" onClick={() => setShowModal(true)}>
+        Как модель создавалась?
+      </button>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Как создавалась модель</h2>
+              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {ML_DESCRIPTION.map((section, i) => (
+                <div key={i} className="modal-section">
+                  <div className="modal-section-number">{i + 1}</div>
+                  <div className="modal-section-content">
+                    <h3>{section.title}</h3>
+                    <p>{section.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="header">
         <span className="header-emoji">🍊</span>
         <div>
@@ -196,9 +253,6 @@ export default function App() {
 
             {/* Action buttons */}
             <div className="upload-actions">
-              {!cameraActive && !filePreview && (
-                <button className="cam-open-btn" onClick={startCamera}>📷 Сделать фото</button>
-              )}
               {loading && !loadingFilename && (
                 <div className="detecting-indicator"><span className="spinner" /> Анализ...</div>
               )}

@@ -13,11 +13,20 @@ MODEL_PATH = Path("/app/model/best_v2_s.pt")
 model = YOLO(str(MODEL_PATH))
 
 CLASS_NAMES = {0: "Fresh Orange", 1: "Rotten Orange"}
+IMGSZ = 1024
+CONF = 0.20
+AUGMENT = False
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "model": MODEL_PATH.name,
+        "imgsz": IMGSZ,
+        "conf": CONF,
+        "augment": AUGMENT,
+    }
 
 
 @app.post("/detect")
@@ -29,12 +38,15 @@ async def detect(file: UploadFile = File(...)):
     if img is None:
         return JSONResponse(status_code=400, content={"error": "Cannot decode image"})
 
+    h, w = img.shape[:2]
+
     results = model.predict(
         source=img,
-        imgsz=640,
-        conf=0.25,
+        imgsz=IMGSZ,
+        conf=CONF,
         iou=0.5,
         device="cpu",
+        augment=AUGMENT,
         verbose=False,
     )
     result = results[0]
@@ -45,12 +57,22 @@ async def detect(file: UploadFile = File(...)):
 
     fresh = rotten = 0
     boxes = result.boxes
+    confs = []
     if boxes is not None and len(boxes) > 0:
+        confs = boxes.conf.tolist()
         for c in boxes.cls.tolist():
             if int(c) == 0:
                 fresh += 1
             else:
                 rotten += 1
+
+    n = fresh + rotten
+    conf_range = f"{min(confs):.2f}..{max(confs):.2f}" if confs else "—"
+    print(
+        f"[detect] input={w}x{h} imgsz={IMGSZ} aug={AUGMENT} "
+        f"found={n} (fresh={fresh}, rotten={rotten}) conf={conf_range}",
+        flush=True,
+    )
 
     total = fresh + rotten
     rotten_pct = round(rotten / total * 100, 1) if total > 0 else 0.0
