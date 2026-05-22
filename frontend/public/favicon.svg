@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="peel" cx="38%" cy="34%" r="68%">
+      <stop offset="0%" stop-color="#ffb15c"/>
+      <stop offset="55%" stop-color="#ff8c1a"/>
+      <stop offset="100%" stop-color="#e8650a"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5fc24a"/>
+      <stop offset="100%" stop-color="#2f8f2f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- orange body -->
+  <circle cx="32" cy="37" r="23" fill="url(#peel)"/>
+
+  <!-- subtle peel texture -->
+  <circle cx="32" cy="37" r="23" fill="none" stroke="#c9540a" stroke-opacity="0.25" stroke-width="1.5"/>
+
+  <!-- highlight -->
+  <ellipse cx="24" cy="28" rx="7.5" ry="5" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- stem -->
+  <rect x="30.5" y="11" width="3" height="7" rx="1.5" fill="#7a4a1e"/>
+
+  <!-- leaf -->
+  <path d="M33 14 C 41 8, 51 10, 52 12 C 50 19, 41 21, 34 16 Z" fill="url(#leaf)"/>
+  <path d="M35 15 C 41 13, 47 13, 50 13" fill="none" stroke="#1f6f23" stroke-opacity="0.5" stroke-width="1" stroke-linecap="round"/>
+</svg>
