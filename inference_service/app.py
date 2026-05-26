@@ -9,7 +9,7 @@ from ultralytics import YOLO
 
 app = FastAPI()
 
-MODEL_PATH = Path("/app/model/best_v2_s.pt")
+MODEL_PATH = Path("/app/model/best_v4_s.pt")
 model = YOLO(str(MODEL_PATH))
 
 CLASS_NAMES = {0: "Fresh Orange", 1: "Rotten Orange"}
